@@ -5,4 +5,5 @@ set(CMAKE_CXX_STANDARD 23)
 
 add_executable(promptly main.cpp
         Segment/Segment.cpp
-        Segment/Segment.h)
+        Segment/Segment.h
+        term.h)
