@@ -1,6 +1,10 @@
 #include <iostream>
 
+#include "Segment/Segment.h"
+
+Segment prompt;
+
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
+    prompt.add(getenv("PWD"));
+    std::cout << prompt.getContent() << std::endl;
 }
