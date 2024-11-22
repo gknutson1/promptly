@@ -54,6 +54,19 @@ void addUserHost(Segment &seg) {
     seg.add(hostname);
 }
 
+// How many characters to allocate for the time.
+// Must be one more than the string length, as a '\n' will be added
+// Currently set to 9 (HH:MM:SS\n)
+#define TIME_LEN 9
+
+void addTime(Segment &seg) {
+    char timestr[TIME_LEN] = {};
+    const time_t cur_time = time(nullptr);
+
+    strftime(timestr, TIME_LEN, "%T", localtime(&cur_time));
+    seg.add(timestr);
+}
+
 int main() {
     Segment left;
     Segment right;
@@ -61,6 +74,7 @@ int main() {
     left.add(getenv("PWD"));
 
     addUserHost(right);
+    addTime(right);
 
     std::cout << left.getContent() << " | " << right.getContent() << std::endl;
 }
