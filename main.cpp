@@ -47,7 +47,7 @@ void addUserHost(Segment &seg) {
     if (getuid() == 0) { seg.addForm(fore::RED); }
     else { seg.addForm(fore::LIGHT_BLUE); }
 
-    seg.add(getlogin())->addForm(fore::RESET)->add('@');
+    seg.add(getlogin())->addForm(ctrl::RESET_FG)->add('@');
 
     char hostname[_SC_HOST_NAME_MAX];
     gethostname(hostname, _SC_HOST_NAME_MAX);
@@ -85,5 +85,5 @@ int main() {
     addUserHost(right);
     addTime(right);
 
-    std::cout << left.getContent() << " | " << right.getContent() << std::endl;
+    std::cout << left.getContent() << right.getContent() << std::endl;
 }

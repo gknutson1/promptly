@@ -16,6 +16,7 @@ public:
     static constexpr std::string RED        = genFG("1");
     static constexpr std::string YELLOW     = genFG("3");
     static constexpr std::string DEFAULT    = genFG(DEFAULT_FG);
+    static constexpr std::string BG_DEFAULT = genFG(DEFAULT_BG);
 };
 
 class back {
@@ -41,3 +42,6 @@ public:
     static constexpr std::string RESET_FG = genSEQ("39");
     static constexpr std::string RESET_BG = genSEQ("49");
 };
+
+static std::string R_DIV = back::DEFAULT + " " + fore::BG_DEFAULT + ctrl::RESET_BG + "\ue0b0" + fore::DEFAULT;
+static std::string L_DIV = ctrl::RESET_BG + fore::BG_DEFAULT + "\ue0b2" + fore::DEFAULT + back::DEFAULT + " ";

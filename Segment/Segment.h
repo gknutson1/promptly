@@ -2,11 +2,13 @@
 
 #include <string>
 
+#include "../term.h"
+
 using std::string;
 
 class Segment {
-    string content;
-    size_t len = 0;
+    string content = L_DIV;
+    size_t len = 4;
 
 public:
     Segment *add(const string &str, const size_t size);
