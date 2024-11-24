@@ -14,8 +14,8 @@ public:
     static constexpr std::string LIGHT_BLUE = genFG("6");
     static constexpr std::string DARK_BLUE  = genFG("4");
     static constexpr std::string RED        = genFG("1");
-    static constexpr std::string YELLOW     = genFG(DEFAULT_FG);
-    static constexpr std::string DEFAULT    = genFG("3");
+    static constexpr std::string YELLOW     = genFG("3");
+    static constexpr std::string DEFAULT    = genFG(DEFAULT_FG);
 };
 
 class back {
