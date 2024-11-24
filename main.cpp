@@ -44,17 +44,17 @@ bool ShellRemote() {
  */
 void addUserHost(Segment &seg) {
     // If we are root, make the username red
-    if (getuid() == 0) { seg.addForm(term::RED); }
-    else { seg.addForm(term::LIGHT_BLUE); }
+    if (getuid() == 0) { seg.addForm(fore::RED); }
+    else { seg.addForm(fore::LIGHT_BLUE); }
 
-    seg.add(getlogin())->addForm(term::RESET)->add('@');
+    seg.add(getlogin())->addForm(fore::RESET)->add('@');
 
     char hostname[_SC_HOST_NAME_MAX];
     gethostname(hostname, _SC_HOST_NAME_MAX);
 
     // If we are connected over ssh, make the hostname yellow
-    if (ShellRemote()) { seg.addForm(term::YELLOW); }
-    else { seg.addForm(term::LIGHT_BLUE); }
+    if (ShellRemote()) { seg.addForm(fore::YELLOW); }
+    else { seg.addForm(fore::LIGHT_BLUE); }
     seg.add(hostname);
 }
 
