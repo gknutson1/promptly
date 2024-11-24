@@ -38,6 +38,10 @@ bool ShellRemote() {
     return data->ut_addr_v6[0] != 0;
 }
 
+/**
+ * Add your username and the system hostname to the given segment
+ * @param seg Segment to add data to
+ */
 void addUserHost(Segment &seg) {
     // If we are root, make the username red
     if (getuid() == 0) { seg.addForm(term::RED); }
@@ -59,10 +63,15 @@ void addUserHost(Segment &seg) {
 // Currently set to 9 (HH:MM:SS\n)
 #define TIME_LEN 9
 
+/**
+ * Add the current time to the given segment
+ * @param seg Segment to add data to
+ */
 void addTime(Segment &seg) {
     char timestr[TIME_LEN] = {};
     const time_t cur_time = time(nullptr);
 
+    // "%T" equivalent to "%H:%M:%S"
     strftime(timestr, TIME_LEN, "%T", localtime(&cur_time));
     seg.add(timestr);
 }
