@@ -19,6 +19,7 @@ public:
 };
 
 class back {
+public:
     static constexpr std::string WHITE      = "\033[48;5;7m";
     static constexpr std::string DEFAULT    = genBG(DEFAULT_BG);
 };
