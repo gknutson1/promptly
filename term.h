@@ -2,9 +2,9 @@
 
 #include <string>
 
-#define genSEQ(str) (std::string("\033[") + str + "m")
-#define genFG(str) (genSEQ("38;5;" + str))
-#define genBG(str) (genSEQ("48;5;" + str))
+#define genSEQ(str) ("\033[" str "m")
+#define genFG(str) (genSEQ("38;5;" str))
+#define genBG(str) (genSEQ("48;5;" str))
 #define DEFAULT_FG "246"
 #define DEFAULT_BG "236"
 
