@@ -3,6 +3,8 @@ project(promptly)
 
 set(CMAKE_CXX_STANDARD 23)
 
+add_compile_options(-Wall -Wextra)
+
 add_executable(promptly main.cpp
         Segment/Segment.cpp
         Segment/Segment.h
