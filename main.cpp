@@ -12,7 +12,10 @@
  * @return true if the user is connected via ssh, false otherwise.
  */
 bool ShellRemote() {
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
     utmp udata {.ut_type = USER_PROCESS};
+    #pragma GCC diagnostic pop
 
     // utmp stores tty w/o /dev (e.g pts/1 instead of /dev/pts/1) so
     // we need to offset ttyname() by the proper number of bytes to remove the leading /dev/
