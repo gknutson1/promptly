@@ -1,4 +1,5 @@
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 #include <unistd.h>
 #include <utmp.h>
@@ -6,6 +7,8 @@
 
 #include "Segment/Segment.h"
 #include "term.h"
+
+namespace fs = std::filesystem;
 
 /**
  * Check whether we are connected over ssh. Looks up the user based on the current tty/pty in the utmp file.
@@ -17,7 +20,7 @@ bool ShellRemote() {
     utmp udata {.ut_type = USER_PROCESS};
     #pragma GCC diagnostic pop
 
-    // utmp stores tty w/o /dev (e.g pts/1 instead of /dev/pts/1) so
+    // utmp stores tty w/o /dev (e.g. pts/1 instead of /dev/pts/1) so
     // we need to offset ttyname() by the proper number of bytes to remove the leading /dev/
     constexpr int offset = sizeof "/dev/" - 1;
     // We need to use strcpy instead of directly assigning to udata.ut_line because
@@ -79,6 +82,25 @@ void addTime(Segment &seg) {
     seg.add(timestr);
 }
 
+void addBat(Segment &seg, bool addSep = false) {
+    fs::path bat;
+
+    for (auto const& dir_entry : std::filesystem::directory_iterator{"/sys/class/power_supply"}) {
+        std::ifstream file (dir_entry.path() / "type");
+        std::string type;
+        file >> type;
+        if (type == "Battery") { bat = dir_entry; break; }
+    }
+
+    if (bat.empty()) { return; }
+    if (addSep) { seg.addSep(); }
+
+    std::string buf;
+    std::ifstream file (bat / "capacity");
+    file >> buf;
+    seg.add(buf);
+
+}
 
 int main() {
     Segment left{fore::DEFAULT + " " + chars::L_SEP + " ", chars::L_SEP_LEN + 2};
@@ -88,6 +110,8 @@ int main() {
     addUserHost(right);
     right.addSep();
     addTime(right);
+
+    addBat(right, true);
 
     std::cout << left.getContent() << right.getContent() << std::endl;
 }
