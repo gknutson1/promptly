@@ -76,13 +76,14 @@ void addTime(Segment &seg) {
     seg.add(timestr);
 }
 
-int main() {
-    Segment left;
-    Segment right;
 
+int main() {
+    Segment left{fore::DEFAULT + " " + chars::L_SEP + " ", chars::L_SEP_LEN + 2};
+    Segment right{fore::DEFAULT + " " + chars::R_SEP + " ", chars::R_SEP_LEN + 2};
     left.add(getenv("PWD"));
 
     addUserHost(right);
+    right.addSep();
     addTime(right);
 
     std::cout << left.getContent() << right.getContent() << std::endl;
