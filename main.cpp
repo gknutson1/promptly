@@ -4,6 +4,9 @@
 #include <unistd.h>
 #include <utmp.h>
 #include <fstream>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <semaphore.h>
 
 #include "Segment/Segment.h"
 #include "term.h"
@@ -102,9 +105,91 @@ void addBat(Segment &seg, bool addSep = false) {
 
 }
 
+void addCPU(Segment &seg) {
+    #define NAME "/promptly"
+    #define MODE 0666
+
+    struct stat {
+        unsigned long total = 0;
+        unsigned long idle = 0;
+
+    };
+
+    // Connect to the shared memory page, and catch the error if it doesn't exist
+    int fd = shm_open(NAME, O_RDWR, MODE);
+    const bool needs_init = fd == -1 && errno == ENOENT;
+
+    // If our shared page is missing: reset errno, create the shared memory file, and set it's size
+    if (needs_init) {
+        errno = 0;
+        fd = shm_open(NAME, O_CREAT | O_RDWR, MODE);
+        ftruncate(fd, sizeof(stat));
+    }
+
+    // Map the shared page to our struct
+    stat *prev = static_cast<stat*>(mmap(nullptr, sizeof(stat), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
+
+    // Get the lock for the data
+    sem_t *lock = sem_open(NAME, O_CREAT, MODE, 1);
+
+    // If the shared memory is currently locked, wait for it to unlock, and then lock it ourselves.
+    sem_wait(lock);
+    sem_post(lock);
+
+    // ReSharper disable once CppDFAMemoryLeak
+    if (needs_init) { prev = new stat; }
+
+    // Get the first line of /proc/stat
+    string buf;
+    std::ifstream file("/proc/stat");
+    getline(file, buf);
+
+    // Erase the "cpu" line at the start of buf
+    buf.erase(0, 3);
+
+    // Get a pointer to the first char in buf,
+    // and make str_end a pointer to that pointer.
+    // Since strtol will "wind" str_end forward whenever
+    // it consumes a char, this allows us to automatically
+    // move forward through buf every time we call strtol
+    char *str = buf.data();
+    char **str_end = &str;
+
+    unsigned long total = 0;
+    unsigned long idle = 0;
+
+    // Read buf to get all the relevant cpu counters
+    total += std::strtol(str, str_end, 10); // user
+    total += std::strtol(str, str_end, 10); // nice
+    total += std::strtol(str, str_end, 10); // system
+
+    // Idle and iowait are the two proc counters that indicate idle cpu
+    idle += std::strtol(str, str_end, 10); // idle
+    idle += std::strtol(str, str_end, 10); // iowait
+    total += idle;
+
+    total += std::strtol(str, str_end, 10); // irq
+    total += std::strtol(str, str_end, 10); // softirq
+    total += std::strtol(str, str_end, 10); // steal
+    total += std::strtol(str, str_end, 10); // guest
+    total += std::strtol(str, str_end, 10); // guest_nice
+
+    int usage = 100 * (idle - prev->idle) / (total - prev->total);
+
+    prev->total = total;
+    prev->idle = idle;
+
+    // Release our lock on the shared memory
+    sem_post(lock);
+
+    seg.add(std::to_string(usage));
+
+}
+
 int main() {
     Segment left{fore::DEFAULT + " " + chars::L_SEP + " ", chars::L_SEP_LEN + 2};
     Segment right{fore::DEFAULT + " " + chars::R_SEP + " ", chars::R_SEP_LEN + 2};
+
     left.add(getenv("PWD"));
 
     addUserHost(right);
@@ -112,6 +197,7 @@ int main() {
     addTime(right);
 
     addBat(right, true);
+    addCPU(right);
 
     std::cout << left.getContent() << right.getContent() << std::endl;
 }
