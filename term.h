@@ -62,6 +62,7 @@ struct chars {
     static constexpr string M_SEP = "\u00b7";
     static constexpr string L_SEP = "\ue0b1";
     static constexpr size_t L_SEP_LEN = strlen(L_SEP);
+    static constexpr string CPU = "\uf4bc";
 };
 
 struct ctrl {

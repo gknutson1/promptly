@@ -111,7 +111,7 @@ void addCPU(Segment &seg) {
 
     struct stat {
         unsigned long total = 0;
-        unsigned long idle = 0;
+        unsigned long used = 0;
 
     };
 
@@ -129,14 +129,14 @@ void addCPU(Segment &seg) {
     // Map the shared page to our struct
     stat *prev = static_cast<stat*>(mmap(nullptr, sizeof(stat), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
 
-    // Get the lock for the data
+    // Get the lock for the data - if it doesn't exist, create it in an unlocked state
     sem_t *lock = sem_open(NAME, O_CREAT, MODE, 1);
 
     // If the shared memory is currently locked, wait for it to unlock, and then lock it ourselves.
     sem_wait(lock);
-    sem_post(lock);
 
     // ReSharper disable once CppDFAMemoryLeak
+    // Initialize the data in the shared memory page, if needed
     if (needs_init) { prev = new stat; }
 
     // Get the first line of /proc/stat
@@ -155,35 +155,37 @@ void addCPU(Segment &seg) {
     char *str = buf.data();
     char **str_end = &str;
 
+    unsigned long used = 0;
     unsigned long total = 0;
-    unsigned long idle = 0;
 
     // Read buf to get all the relevant cpu counters
-    total += std::strtol(str, str_end, 10); // user
-    total += std::strtol(str, str_end, 10); // nice
-    total += std::strtol(str, str_end, 10); // system
+    used += std::strtol(str, str_end, 10); // user
+    used += std::strtol(str, str_end, 10); // nice
+    used += std::strtol(str, str_end, 10); // system
 
     // Idle and iowait are the two proc counters that indicate idle cpu
-    idle += std::strtol(str, str_end, 10); // idle
-    idle += std::strtol(str, str_end, 10); // iowait
-    total += idle;
+    total += std::strtol(str, str_end, 10); // idle
+    total += std::strtol(str, str_end, 10); // iowait
 
-    total += std::strtol(str, str_end, 10); // irq
-    total += std::strtol(str, str_end, 10); // softirq
-    total += std::strtol(str, str_end, 10); // steal
-    total += std::strtol(str, str_end, 10); // guest
-    total += std::strtol(str, str_end, 10); // guest_nice
+    used += std::strtol(str, str_end, 10); // irq
+    used += std::strtol(str, str_end, 10); // softirq
+    used += std::strtol(str, str_end, 10); // steal
+    used += std::strtol(str, str_end, 10); // guest
+    used += std::strtol(str, str_end, 10); // guest_nice
 
-    int usage = 100 * (idle - prev->idle) / (total - prev->total);
+    total += used;
+
+    unsigned int usage = static_cast<int>(100l * (used - prev->used) / (total - prev->total));
 
     prev->total = total;
-    prev->idle = idle;
+    prev->used = used;
 
     // Release our lock on the shared memory
     sem_post(lock);
-
-    seg.add(std::to_string(usage));
-
+    std::cout << usage << std::endl;
+    std::string dt = std::to_string(usage);
+    seg.add(dt)->add(" " + chars::CPU + " ", 3);
+    std::cout << dt << std::endl;
 }
 
 int main() {
