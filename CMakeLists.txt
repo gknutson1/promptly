@@ -8,4 +8,6 @@ add_compile_options(-Wall -Wextra)
 add_executable(promptly main.cpp
         Segment/Segment.cpp
         Segment/Segment.h
-        term.h)
+        term.h
+        Element/Element.cpp
+        Element/Element.h)

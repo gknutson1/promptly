@@ -2,21 +2,32 @@
 
 using std::string;
 
-Segment *Segment::add(const string &str, const size_t size) {
-    content.append(str);
-    len += size;
+size_t Segment::getLen() const {
+    size_t size = base_len;
 
-    return this;
+    auto iter = elements.begin();
+    size += iter->getLen();
+    ++iter;
+
+    while (iter != elements.end()) {
+        size += sep_len + iter->getLen();
+        ++iter;
+    }
+
+    return size;
 }
 
-Segment *Segment::add(const string &str) { return add(str, str.size()); }
+string Segment::getContent() const {
+    auto iter = elements.begin();
+    string s = L_DIV + iter->getContent();
+    ++iter;
 
-Segment *Segment::add(const char chr) { return add({chr}, 1); }
+    while (iter != elements.end()) {
+        s += sep + iter->getContent();
+        ++iter;
+    }
 
-Segment *Segment::addForm(const std::string &str) { return add(str, 0); }
+    s += R_DIV;
 
-Segment * Segment::addSep() { return add(sep, sep_len); }
-
-std::string Segment::getContent() const { return L_DIV + content + R_DIV; }
-
-std::string::size_type Segment::getLen() const { return len; }
+    return s;
+}

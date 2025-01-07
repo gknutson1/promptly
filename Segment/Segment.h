@@ -3,10 +3,12 @@
 #define INT_R_DIV ( back::DEFAULT + " " + fore::BG_DEFAULT + ctrl::RESET_BG + "\ue0b0" + fore::DEFAULT )
 #define INT_L_DIV ( ctrl::RESET_BG + fore::BG_DEFAULT + "\ue0b2" + fore::DEFAULT + back::DEFAULT + " " )
 
+#include <forward_list>
 #include <string>
 #include <utility>
 
 #include "../term.h"
+#include "../Element/Element.h"
 
 using std::string;
 
@@ -19,24 +21,15 @@ class Segment {
     const string sep;
     const size_t sep_len;
 
-    string content;
-    size_t len = base_len;
+    std::forward_list<Element> elements;
 
 public:
-    // ReSharper disable once CppNonExplicitConvertingConstructor
-    // NOLINTNEXTLINE(google-explicit-constructor)
-    Segment(string sep, const size_t len): sep(std::move(sep)), sep_len(len) {};
+    Segment(string sep, const size_t len): sep(std::move(sep)), sep_len(len) {}
 
-    Segment *add(const string &str, size_t size);
+    std::forward_list<Element> *getList() { return &elements; };
+    void add(const Element& element) { elements.push_front(element); }
+    void add(const string& element) { elements.emplace_front(element); }
 
-    Segment *add(const string &str);
-
-    Segment *add(char chr);
-
-    Segment *addForm(const string &str);
-
-    Segment *addSep();
-
+    [[nodiscard]] size_t getLen() const;
     [[nodiscard]] string getContent() const;
-    [[nodiscard]] string::size_type getLen() const;
 };

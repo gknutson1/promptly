@@ -9,6 +9,7 @@
 #include <semaphore.h>
 
 #include "Segment/Segment.h"
+#include "Element/Element.h"
 #include "term.h"
 
 namespace fs = std::filesystem;
@@ -48,23 +49,26 @@ bool ShellRemote() {
 }
 
 /**
- * Add your username and the system hostname to the given segment
- * @param seg Segment to add data to
+ * Create an Element containing the username and the system hostname
  */
-void addUserHost(Segment &seg) {
-    // If we are root, make the username red
-    if (getuid() == 0) { seg.addForm(fore::RED); }
-    else { seg.addForm(fore::LIGHT_BLUE); }
+Element addUserHost() {
+    Element element;
 
-    seg.add(getlogin())->addForm(ctrl::RESET_FG)->add('@');
+    // If we are root, make the username red
+    if (getuid() == 0) { element.addForm(fore::RED); }
+    else { element.addForm(fore::LIGHT_BLUE); }
+
+    element.add(getlogin())->addForm(ctrl::RESET_FG)->add('@');
 
     char hostname[_SC_HOST_NAME_MAX];
     gethostname(hostname, _SC_HOST_NAME_MAX);
 
     // If we are connected over ssh, make the hostname yellow
-    if (ShellRemote()) { seg.addForm(fore::YELLOW); }
-    else { seg.addForm(fore::LIGHT_BLUE); }
-    seg.add(hostname);
+    if (ShellRemote()) { element.addForm(fore::YELLOW); }
+    else { element.addForm(fore::LIGHT_BLUE); }
+    element.add(hostname);
+
+    return element;
 }
 
 // How many characters to allocate for the time.
@@ -73,19 +77,21 @@ void addUserHost(Segment &seg) {
 #define TIME_LEN 9
 
 /**
- * Add the current time to the given segment
- * @param seg Segment to add data to
+ * Create an element containing the current time
  */
-void addTime(Segment &seg) {
+Element addTime() {
+
     char timestr[TIME_LEN] = {};
     const time_t cur_time = time(nullptr);
 
     // "%T" equivalent to "%H:%M:%S"
     strftime(timestr, TIME_LEN, "%T", localtime(&cur_time));
-    seg.add(timestr);
+
+    return {timestr};
 }
 
-void addBat(Segment &seg, bool addSep = false) {
+void addBat(Segment &seg) {
+    Element element;
     fs::path bat;
 
     for (auto const& dir_entry : std::filesystem::directory_iterator{"/sys/class/power_supply"}) {
@@ -96,16 +102,14 @@ void addBat(Segment &seg, bool addSep = false) {
     }
 
     if (bat.empty()) { return; }
-    if (addSep) { seg.addSep(); }
 
     std::string buf;
     std::ifstream file (bat / "capacity");
     file >> buf;
-    seg.add(buf);
-
+    seg.getList()->emplace_front(buf);
 }
 
-void addCPU(Segment &seg) {
+Element addCPU() {
     #define NAME "/promptly"
     #define MODE 0666
 
@@ -182,10 +186,12 @@ void addCPU(Segment &seg) {
 
     // Release our lock on the shared memory
     sem_post(lock);
-    std::cout << usage << std::endl;
-    std::string dt = std::to_string(usage);
-    seg.add(dt)->add(" " + chars::CPU + " ", 3);
-    std::cout << dt << std::endl;
+
+    Element element(std::to_string(usage));
+    element.add(" " + chars::CPU + " ", 3);
+
+    return element;
+}
 }
 
 int main() {
@@ -194,12 +200,11 @@ int main() {
 
     left.add(getenv("PWD"));
 
-    addUserHost(right);
-    right.addSep();
-    addTime(right);
+    right.add(addUserHost());
+    right.add(addTime());
 
-    addBat(right, true);
-    addCPU(right);
+    addBat(right);
+    right.add(addCPU());
 
     std::cout << left.getContent() << right.getContent() << std::endl;
 }
