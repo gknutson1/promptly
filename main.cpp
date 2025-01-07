@@ -194,17 +194,20 @@ Element addCPU() {
 }
 
 void addPythonEnv(Segment &seg) {
-    string name = getenv("VIRTUAL_ENV_PROMPT");
+    const char* cname = std::getenv("VIRTUAL_ENV_PROMPT");
+    string name;
 
-    if (name.empty()) {
+    if (cname == nullptr) {
         // If VIRTUAL_ENV_PROMPT is empty, try VIRTUAL_ENV
-        name = getenv("VIRTAUL_ENV");
+        cname = getenv("VIRTAUL_ENV");
         // If still empty, assume not using a virtual environment
-        if (name.empty()) { return; }
+        if (cname == nullptr) { return; }
         // If using VIRTUAL_ENV, use only the last path segment
+        name = cname;
         name = name.substr(name.find_last_of(fs::path::preferred_separator) + 1);
     } else {
         // If they exist, clear the parenthesis surrounding the prompt
+        name = cname;
         if (name.starts_with("(")) { name.erase(0, 1); }
         if (name.ends_with(")")) { name.erase(name.size() - 1, 1); }
     }
