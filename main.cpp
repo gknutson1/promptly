@@ -11,6 +11,7 @@
 #include "Segment/Segment.h"
 #include "Element/Element.h"
 #include "term.h"
+#include "icons.h"
 
 namespace fs = std::filesystem;
 
@@ -215,11 +216,48 @@ void addPythonEnv(Segment &seg) {
     seg.add(name + " " + chars::PYTHON + " ");
 }
 
+
+/**
+ * Get the nerd font icon for the current distro. Find the distro by reading /etc/os-release. If we can't find
+ * a match, default to the linux "tux" icon.
+ * @return A string containg the two-byte utf8 sequence that corresponds to the current distro
+ */
+Element getIcon() {
+    auto file = std::ifstream("/etc/os-release");
+    std::string str;
+
+    // Find the /etc/os-release line that holds the distro name ("NAME=")
+    while (!file.eof()) {
+        std::getline(file, str);
+        if (str.starts_with("NAME=")) { break; }
+    }
+
+    // Get the os name (stored between the double quotes)
+    size_t start = str.find_first_of('"') + 1;
+    size_t length = str.find_last_of('"') - start;
+    str = str.substr(start, length);
+
+    // Loop through to delete all " ", "_", and "-" characters from the name, to improve icon detection
+    for (size_t i = str.length() - 1;; i--) {
+        char c = str[i];
+        if (c == ' ' || c == '-' || c == '_') { str.erase(i, 1); }
+        else { str[i] = tolower(c); }
+        if (i <= 0) { break; }
+    }
+
+    const std::string& icon = icons.at(str);
+
+    // Default to the linux penguin ("tux") if we don't know the icon
+    if (icon.empty()) { return icons.at("tux"); }
+    return {icon};
+}
+
 int main() {
     Segment left{fore::DEFAULT + " " + chars::L_SEP + " ", chars::L_SEP_LEN + 2};
     Segment right{fore::DEFAULT + " " + chars::R_SEP + " ", chars::R_SEP_LEN + 2};
 
     left.add(getenv("PWD"));
+    left.add(getIcon());
 
     right.add(addUserHost());
     right.add(addTime());

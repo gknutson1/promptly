@@ -10,4 +10,6 @@ add_executable(promptly main.cpp
         Segment/Segment.h
         term.h
         Element/Element.cpp
-        Element/Element.h)
+        Element/Element.h
+        icons.h
+)
