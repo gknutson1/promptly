@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <string>
 
 using std::string;
@@ -63,7 +64,36 @@ struct chars {
     static constexpr string L_SEP = "\ue0b1";
     static constexpr size_t L_SEP_LEN = strlen(L_SEP);
     static constexpr string CPU = "\uf4bc";
+    static constexpr string MEM = "\uefc5";
     static constexpr string PYTHON = "\ue73c";
+};
+
+static const std::map<int, string> bat_drain = {
+    {0, "󱃍"},
+    {1, "󰁺"},
+    {2, "󰁻"},
+    {3, "󰁼"},
+    {4, "󰁽"},
+    {5, "󰁾"},
+    {6, "󰁿"},
+    {7, "󰂀"},
+    {8, "󰂁"},
+    {9, "󰂂"},
+    {10, "󰁹"}
+};
+
+static const std::map<int, string> bat_charge = {
+    {0, "󰢟"},
+    {1, "󰢜"},
+    {2, "󰂆"},
+    {3, "󰂇"},
+    {4, "󰂈"},
+    {5, "󰢝"},
+    {6, "󰂉"},
+    {7, "󰢞"},
+    {8, "󰂊"},
+    {9, "󰂋"},
+    {10, "󰂅"}
 };
 
 struct ctrl {

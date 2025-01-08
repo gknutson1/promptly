@@ -92,9 +92,9 @@ Element addTime() {
 }
 
 void addBat(Segment &seg) {
-    Element element;
     fs::path bat;
 
+    // Iterate through /sys/class/power_supply to find a entry with a type of "Battery"
     for (auto const& dir_entry : std::filesystem::directory_iterator{"/sys/class/power_supply"}) {
         std::ifstream file (dir_entry.path() / "type");
         std::string type;
@@ -105,9 +105,28 @@ void addBat(Segment &seg) {
     if (bat.empty()) { return; }
 
     std::string buf;
+
+    // Get current battery capacity
     std::ifstream file (bat / "capacity");
     file >> buf;
-    seg.getList()->emplace_front(buf);
+    Element element(buf + " ");
+
+    // Convert capacity to integer
+    int pwr = std::stoi(buf);
+    // Battery icons are in steps of 10, so we need to round capacity to the tens place
+    int pwr_increment =  pwr / 10 + (pwr % 10 >= 5);
+
+    // Determine if we are plugged in and add the relevant icon
+    file = bat / "status";
+    file >> buf;
+
+    if (buf == "Charging" || buf == "Full") {
+        element.add(bat_charge.at(pwr_increment), 1);
+    } else {
+        element.add(bat_drain.at(pwr_increment), 1);
+    }
+
+    seg.getList()->emplace_front(element);
 }
 
 Element addCPU() {
