@@ -268,7 +268,7 @@ Element getIcon() {
 
     // Default to the linux penguin ("tux") if we don't know the icon
     if (icon.empty()) { return icons.at("tux"); }
-    return {icon};
+    return *Element().add(icon, 1);
 }
 
 int main() {
