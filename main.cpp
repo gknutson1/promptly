@@ -126,7 +126,7 @@ void addBat(Segment &seg) {
         element.add(bat_drain.at(pwr_increment), 1);
     }
 
-    seg.getList()->emplace_front(element);
+    seg.add(element);
 }
 
 Element addCPU() {

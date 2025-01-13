@@ -3,14 +3,20 @@
 #define INT_R_DIV ( back::DEFAULT + " " + fore::BG_DEFAULT + ctrl::RESET_BG + "\ue0b0" + fore::DEFAULT )
 #define INT_L_DIV ( ctrl::RESET_BG + fore::BG_DEFAULT + "\ue0b2" + fore::DEFAULT + back::DEFAULT + " " )
 
-#include <forward_list>
 #include <string>
-#include <utility>
 
 #include "../term.h"
 #include "../Element/Element.h"
 
 using std::string;
+
+class ElementNode {
+public:
+    Element element;
+    ElementNode* next = nullptr;
+public:
+    explicit ElementNode(Element element) : element(std::move(element)) {}
+};
 
 class Segment {
     // R_DIV and L_DIV can't be constexpr because GCC doesn't like constexpr strings w/ a length over 15 characters
@@ -21,14 +27,23 @@ class Segment {
     const string sep;
     const size_t sep_len;
 
-    std::forward_list<Element> elements;
-
+    ElementNode* start = nullptr;
+    ElementNode* end = nullptr;
 public:
     Segment(string sep, const size_t len): sep(std::move(sep)), sep_len(len) {}
 
-    std::forward_list<Element> *getList() { return &elements; };
-    void add(const Element& element) { elements.push_front(element); }
-    void add(const string& element) { elements.emplace_front(element); }
+    void add(const Element& element) {
+        if (start == nullptr) {
+            start = new ElementNode(element);
+            end = start;
+        }
+        else {
+            end->next = new ElementNode(element);
+            end = end->next;
+        }
+    }
+
+    void add(const string& element) { add(Element(element)); }
 
     [[nodiscard]] size_t getLen() const;
     [[nodiscard]] string getContent() const;
