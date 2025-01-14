@@ -25,7 +25,9 @@ bool ShellRemote() {
     utmp udata {.ut_type = USER_PROCESS};
     #pragma GCC diagnostic pop
 
-    // utmp stores tty w/o /dev (e.g. pts/1 instead of /dev/pts/1) so
+    // remote access status can be found in the utmp file, that we can search by
+    // using ttyname() to get our tty and looking up that tty with getutline().
+    // However utmp stores tty w/o /dev (e.g. pts/1 instead of /dev/pts/1) so
     // we need to offset ttyname() by the proper number of bytes to remove the leading /dev/
     constexpr int offset = sizeof "/dev/" - 1;
     // We need to use strcpy instead of directly assigning to udata.ut_line because
@@ -50,26 +52,25 @@ bool ShellRemote() {
 }
 
 /**
- * Create an Element containing the username and the system hostname
+ * Add an element containing the username and hostname
+ * @param seg Segment to add the element to
  */
-Element addUserHost() {
-    Element element;
+void addUserHost(Segment &seg) {
+    Element *element = seg.AppendElement();
 
     // If we are root, make the username red
-    if (getuid() == 0) { element.addForm(fore::RED); }
-    else { element.addForm(fore::LIGHT_BLUE); }
+    if (getuid() == 0) { element->addForm(fore::RED); }
+    else { element->addForm(fore::LIGHT_BLUE); }
 
-    element.add(getlogin())->addForm(ctrl::RESET_FG)->add('@');
+    element->add(getlogin())->addForm(ctrl::RESET_FG)->add('@');
 
     char hostname[_SC_HOST_NAME_MAX];
     gethostname(hostname, _SC_HOST_NAME_MAX);
 
     // If we are connected over ssh, make the hostname yellow
-    if (ShellRemote()) { element.addForm(fore::YELLOW); }
-    else { element.addForm(fore::LIGHT_BLUE); }
-    element.add(hostname);
-
-    return element;
+    if (ShellRemote()) { element->addForm(fore::YELLOW); }
+    else { element->addForm(fore::LIGHT_BLUE); }
+    element->add(hostname);
 }
 
 // How many characters to allocate for the time.
@@ -78,9 +79,10 @@ Element addUserHost() {
 #define TIME_LEN 9
 
 /**
- * Create an element containing the current time
+ * Add an element containing the current time
+ * @param seg Segment to add the element to
  */
-Element addTime() {
+void addTime(Segment &seg) {
 
     char timestr[TIME_LEN] = {};
     const time_t cur_time = time(nullptr);
@@ -88,10 +90,15 @@ Element addTime() {
     // "%T" equivalent to "%H:%M:%S"
     strftime(timestr, TIME_LEN, "%T", localtime(&cur_time));
 
-    return {timestr};
+    seg.AppendElement(timestr);
 }
 
-void addBat(Segment &seg) {
+/**
+ * Add an element containing the current battery level, if a battery is installed
+ * @param seg Segment to add the element to
+ * @return true if a battery was found and a element was added, false otherwise
+ */
+bool addBat(Segment &seg) {
     fs::path bat;
 
     // Iterate through /sys/class/power_supply to find a entry with a type of "Battery"
@@ -102,14 +109,14 @@ void addBat(Segment &seg) {
         if (type == "Battery") { bat = dir_entry; break; }
     }
 
-    if (bat.empty()) { return; }
+    if (bat.empty()) { return false; }
 
     std::string buf;
 
     // Get current battery capacity
     std::ifstream file (bat / "capacity");
     file >> buf;
-    Element element(buf + " ");
+    Element *element = seg.AppendElement(buf + " ");
 
     // Convert capacity to integer
     int pwr = std::stoi(buf);
@@ -121,15 +128,20 @@ void addBat(Segment &seg) {
     file >> buf;
 
     if (buf == "Charging" || buf == "Full") {
-        element.add(bat_charge.at(pwr_increment), 1);
+        element->add(bat_charge.at(pwr_increment), 1);
     } else {
-        element.add(bat_drain.at(pwr_increment), 1);
+        element->add(bat_drain.at(pwr_increment), 1);
     }
 
-    seg.add(element);
+    return true;
 }
 
-Element addCPU() {
+/**
+ * Add an element containing the current cpu usage. This utilizes a shared memory page
+ * to share the previous cpu counters with.
+ * @param seg Segment to add the element to
+ */
+void addCPU(Segment& seg) {
     #define NAME "/promptly"
     #define MODE 0666
 
@@ -207,13 +219,18 @@ Element addCPU() {
     // Release our lock on the shared memory
     sem_post(lock);
 
-    Element element(std::to_string(usage));
-    element.add(" " + chars::CPU + " ", 3);
-
-    return element;
+    Element *element = seg.AppendElement(std::to_string(usage));
+    element->add(" " + chars::CPU + " ", 3);
 }
 
-void addPythonEnv(Segment &seg) {
+/**
+ * Add an element containing information on the current python environment, if in a venv/virtualenv
+ * @param seg Segment to add the element to
+ * @return true if a python virtual environment was detected and a element was added, false otherwise
+ */
+bool addPythonEnv(Segment &seg) {
+    // this needs to be a char* and not a string because if the environment variable
+    // does not exists, std::getenv returns null which causes the string constructor to crash
     const char* cname = std::getenv("VIRTUAL_ENV_PROMPT");
     string name;
 
@@ -221,7 +238,7 @@ void addPythonEnv(Segment &seg) {
         // If VIRTUAL_ENV_PROMPT is empty, try VIRTUAL_ENV
         cname = getenv("VIRTAUL_ENV");
         // If still empty, assume not using a virtual environment
-        if (cname == nullptr) { return; }
+        if (cname == nullptr) { return false; }
         // If using VIRTUAL_ENV, use only the last path segment
         name = cname;
         name = name.substr(name.find_last_of(fs::path::preferred_separator) + 1);
@@ -232,16 +249,16 @@ void addPythonEnv(Segment &seg) {
         if (name.ends_with(")")) { name.erase(name.size() - 1, 1); }
     }
 
-    seg.add(name + " " + chars::PYTHON + " ");
+    seg.AppendElement()->add(name + " " + chars::PYTHON + " ", 3);
+    return true;
 }
 
-
 /**
- * Get the nerd font icon for the current distro. Find the distro by reading /etc/os-release. If we can't find
- * a match, default to the linux "tux" icon.
- * @return A string containg the two-byte utf8 sequence that corresponds to the current distro
+ * Add an element containing the nerd font icon for the current distro. Find the distro by reading /etc/os-release.
+ * If we can't find a match, default to the linux "tux" icon.
+ * @param seg Segment to add the element to
  */
-Element getIcon() {
+void getIcon(Segment &seg) {
     auto file = std::ifstream("/etc/os-release");
     std::string str;
 
@@ -267,23 +284,23 @@ Element getIcon() {
     const std::string& icon = icons.at(str);
 
     // Default to the linux penguin ("tux") if we don't know the icon
-    if (icon.empty()) { return icons.at("tux"); }
-    return *Element().add(icon, 1);
+    if (icon.empty()) { seg.AppendElement()->add(icons.at("tux"), 1); }
+    else { seg.AppendElement()->add(icon, 1); }
 }
 
 int main() {
     Segment left{fore::DEFAULT + " " + chars::L_SEP + " ", chars::L_SEP_LEN + 2};
     Segment right{fore::DEFAULT + " " + chars::R_SEP + " ", chars::R_SEP_LEN + 2};
 
-    left.add(getenv("PWD"));
-    left.add(getIcon());
-
-    right.add(addUserHost());
-    right.add(addTime());
+    addUserHost(right);
+    addTime(right);
 
     addBat(right);
-    right.add(addCPU());
+    addCPU(right);
     addPythonEnv(right);
 
+    getIcon(left);
+
+    left.AppendElement(getenv("PWD"));
     std::cout << left.getContent() << right.getContent() << std::endl;
 }

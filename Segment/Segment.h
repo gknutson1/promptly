@@ -15,6 +15,7 @@ public:
     Element element;
     ElementNode* next = nullptr;
 public:
+    ElementNode() : element(Element()) {}
     explicit ElementNode(Element element) : element(std::move(element)) {}
 };
 
@@ -32,18 +33,23 @@ class Segment {
 public:
     Segment(string sep, const size_t len): sep(std::move(sep)), sep_len(len) {}
 
-    void add(const Element& element) {
-        if (start == nullptr) {
-            start = new ElementNode(element);
-            end = start;
-        }
-        else {
-            end->next = new ElementNode(element);
-            end = end->next;
-        }
+    Element* AppendElement() {
+        if (start == nullptr)
+            end = start = new ElementNode();
+        else
+            end = end->next = new ElementNode();
+
+        return &end->element;
     }
 
-    void add(const string& element) { add(Element(element)); }
+    Element* AppendElement(const string& element) {
+        if (start == nullptr)
+            end = start = new ElementNode(element);
+        else
+            end = end->next = new ElementNode(element);
+
+        return &end->element;
+    }
 
     [[nodiscard]] size_t getLen() const;
     [[nodiscard]] string getContent() const;
