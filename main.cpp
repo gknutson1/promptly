@@ -56,7 +56,7 @@ bool ShellRemote() {
  * @param seg Segment to add the element to
  */
 void addUserHost(Segment &seg) {
-    Element *element = seg.AppendElement();
+    Element *element = seg.Append();
 
     // If we are root, make the username red
     if (getuid() == 0) { element->addForm(fore::RED); }
@@ -90,7 +90,7 @@ void addTime(Segment &seg) {
     // "%T" equivalent to "%H:%M:%S"
     strftime(timestr, TIME_LEN, "%T", localtime(&cur_time));
 
-    seg.AppendElement(timestr);
+    seg.Append(timestr);
 }
 
 /**
@@ -116,7 +116,7 @@ bool addBat(Segment &seg) {
     // Get current battery capacity
     std::ifstream file (bat / "capacity");
     file >> buf;
-    Element *element = seg.AppendElement(buf + " ");
+    Element *element = seg.Append(buf + " ");
 
     // Convert capacity to integer
     int pwr = std::stoi(buf);
@@ -219,7 +219,7 @@ void addCPU(Segment& seg) {
     // Release our lock on the shared memory
     sem_post(lock);
 
-    Element *element = seg.AppendElement(std::to_string(usage));
+    Element *element = seg.Append(std::to_string(usage));
     element->add(" " + chars::CPU + " ", 3);
 }
 
@@ -249,7 +249,7 @@ bool addPythonEnv(Segment &seg) {
         if (name.ends_with(")")) { name.erase(name.size() - 1, 1); }
     }
 
-    seg.AppendElement()->add(name + " " + chars::PYTHON + " ", 3);
+    seg.Append()->add(name + " " + chars::PYTHON + " ", 3);
     return true;
 }
 
@@ -284,8 +284,8 @@ void getIcon(Segment &seg) {
     const std::string& icon = icons.at(str);
 
     // Default to the linux penguin ("tux") if we don't know the icon
-    if (icon.empty()) { seg.AppendElement()->add(icons.at("tux"), 1); }
-    else { seg.AppendElement()->add(icon, 1); }
+    if (icon.empty()) { seg.Append()->add(icons.at("tux"), 1); }
+    else { seg.Append()->add(icon, 1); }
 }
 
 int main() {

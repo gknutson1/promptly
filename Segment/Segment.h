@@ -7,17 +7,9 @@
 
 #include "../term.h"
 #include "../Element/Element.h"
+#include "../List/List.h"
 
 using std::string;
-
-class ElementNode {
-public:
-    Element element;
-    ElementNode* next = nullptr;
-public:
-    ElementNode() : element(Element()) {}
-    explicit ElementNode(Element element) : element(std::move(element)) {}
-};
 
 class Segment {
     // R_DIV and L_DIV can't be constexpr because GCC doesn't like constexpr strings w/ a length over 15 characters
@@ -28,27 +20,16 @@ class Segment {
     const string sep;
     const size_t sep_len;
 
-    ElementNode* start = nullptr;
-    ElementNode* end = nullptr;
+    List<Element> elements;
 public:
     Segment(string sep, const size_t len): sep(std::move(sep)), sep_len(len) {}
 
-    Element* AppendElement() {
-        if (start == nullptr)
-            end = start = new ElementNode();
-        else
-            end = end->next = new ElementNode();
-
-        return &end->element;
+    Element* Append() {
+        return elements.Append(Element());
     }
 
-    Element* AppendElement(const string& element) {
-        if (start == nullptr)
-            end = start = new ElementNode(element);
-        else
-            end = end->next = new ElementNode(element);
-
-        return &end->element;
+    Element* Append(const string& data) {
+        return elements.Append(Element(data));
     }
 
     [[nodiscard]] size_t getLen() const;
