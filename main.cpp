@@ -7,11 +7,13 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <semaphore.h>
+#include <climits>
 
 #include "Segment/Segment.h"
 #include "Element/Element.h"
 #include "term.h"
 #include "icons.h"
+#include "Path/Path.h"
 
 namespace fs = std::filesystem;
 
@@ -302,7 +304,7 @@ int main() {
     addPythonEnv(right);
 
     getIcon(left);
+    Path::addPath(left, INT_MAX);
 
-    left.AppendElement(getenv("PWD"));
     std::cout << left.getContent() << right.getContent() << std::endl;
 }

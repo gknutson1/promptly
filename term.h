@@ -65,7 +65,11 @@ struct chars {
     static constexpr size_t L_SEP_LEN = u_strlen(L_SEP);
     static constexpr string CPU = "\uf4bc";
     static constexpr string MEM = "\uefc5";
+    static constexpr string CLOCK = "\uf017";
     static constexpr string PYTHON = "\ue73c";
+    static constexpr string FOLDER = "\uf115";
+    static constexpr string LOCK = "\uf023";
+    static constexpr string HOME = "\uf015";
 };
 
 static const std::map<int, string> bat_drain = {
