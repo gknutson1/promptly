@@ -42,20 +42,21 @@ public:
     Iter& operator++() { pos = pos->next; return *this; }
 
     Iter operator++(int) {
-        Iter tmp(pos); +
-                +pos;
+        Iter tmp(pos);
+        ++pos;
         return tmp;
     }
 
+    [[nodiscard]] Node<T> *peek() const { return pos->next; }
+
     bool operator==(const Iter & end) const { return end.pos == this->pos; }
-    T operator*() const { return **pos; }
+    T& operator*() const { return **pos; }
 
     [[nodiscard]] std::string toString() const { return pos->toString(); }
     [[nodiscard]] std::string toString(const std::string& sep) const { return pos->toString(sep); };
 };
 
 static_assert(std::forward_iterator<Iter<std::string>>);
-
 
 template <typename T>
 class List {
@@ -70,6 +71,7 @@ class List {
         _append = &List::append_subsequent;
         return &head->data;
     }
+
     T* append_subsequent(T &value) {
         **tail = value;
         T *ptr = &tail->data;
