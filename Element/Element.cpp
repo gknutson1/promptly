@@ -17,6 +17,8 @@ Element *Element::add(const char chr) { return add({chr}, 1); }
 
 Element *Element::addForm(const string &str) { return add(str, 0); }
 
+Element * Element::addIcon(const string &str) { return add(str + " ", 2); }
+
 string Element::getContent() const { return content; }
 
 string::size_type Element::getLen() const { return len; }

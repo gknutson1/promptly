@@ -21,6 +21,8 @@ public:
 
     Element *addForm(const string &str);
 
+    Element *addIcon(const string &str);
+
     [[nodiscard]] string getContent() const;
     [[nodiscard]] string::size_type getLen() const;
 };
