@@ -12,5 +12,7 @@ add_executable(promptly main.cpp
         Element/Element.cpp
         Element/Element.h
         icons.h
+        Path/Path.cpp
+        Path/Path.h
         List/List.h
 )
