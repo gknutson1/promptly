@@ -15,7 +15,7 @@ class Segment {
     // R_DIV and L_DIV can't be constexpr because GCC doesn't like constexpr strings w/ a length over 15 characters
     inline static const string R_DIV = INT_R_DIV;
     inline static const string L_DIV = INT_L_DIV;
-    static constexpr size_t base_len = strlen(INT_R_DIV) + strlen(INT_R_DIV);
+    static constexpr size_t base_len = u_strlen(INT_R_DIV) + u_strlen(INT_R_DIV);
 
     const string sep;
     const size_t sep_len;

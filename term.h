@@ -17,7 +17,7 @@ using std::string;
  * @param str The string to count
  * @return The number of characters that would be displayed if the string were printed
  */
-static constexpr size_t strlen(string str) {
+static constexpr size_t u_strlen(string str) {
     size_t result = 0;
 
     bool term_seq = false;
@@ -59,10 +59,10 @@ struct chars {
     // instead of a char16_t that will need to be converted back into a 2-byte u8 char
     // every time it needs to be added to a segment.
     static constexpr string R_SEP = "\ue0b3";
-    static constexpr size_t R_SEP_LEN = strlen(R_SEP);
+    static constexpr size_t R_SEP_LEN = u_strlen(R_SEP);
     static constexpr string M_SEP = "\u00b7";
     static constexpr string L_SEP = "\ue0b1";
-    static constexpr size_t L_SEP_LEN = strlen(L_SEP);
+    static constexpr size_t L_SEP_LEN = u_strlen(L_SEP);
     static constexpr string CPU = "\uf4bc";
     static constexpr string MEM = "\uefc5";
     static constexpr string PYTHON = "\ue73c";
