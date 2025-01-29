@@ -116,6 +116,8 @@ bool addBat(Segment &seg) {
     // Get current battery capacity
     std::ifstream file (bat / "capacity");
     file >> buf;
+    if (buf.empty()) { return false; }
+
     Element *element = seg.Append(buf + " ");
 
     // Convert capacity to integer
