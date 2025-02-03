@@ -5,6 +5,7 @@
 #include <utmp.h>
 #include <fstream>
 #include <sys/mman.h>
+#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <semaphore.h>
 #include <climits>
@@ -292,9 +293,38 @@ void getIcon(Segment &seg) {
     else { seg.Append()->add(icon, 1); }
 }
 
-int main() {
+bool statusOK(Segment &seg, const int argc, char **argv) {
+    if (argc <= 1) { return true; }
+
+    bool ok = true;
+    string err;
+
+    // Loop through all arguments
+    for (int arg = 1; arg < argc; arg++) {
+        // Check if any character in the arguments is not 0 - this indicates an error
+        for (char chr = argv[arg][0]; chr; ++chr) { if (chr != '0') ok = false; }
+
+        // Add error code to the error string. Add '|' characters between every error.
+        err += argv[arg];
+        if (arg < argc - 1) err += '|';
+    }
+
+    if (!ok) seg.Append()->addForm(fore::RED)->add(err);
+    return ok;
+}
+
+winsize getSize() {
+    winsize size; // NOLINT(*-pro-type-member-init)
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+
+    return size;
+}
+
+int main(int argc, char **argv) {
     Segment left{fore::DEFAULT + " " + chars::L_SEP + " ", chars::L_SEP_LEN + 2};
     Segment right{fore::DEFAULT + " " + chars::R_SEP + " ", chars::R_SEP_LEN + 2};
+
+    const bool status = statusOK(right, argc, argv);
 
     addUserHost(right);
     addTime(right);
@@ -304,7 +334,9 @@ int main() {
     addPythonEnv(right);
 
     getIcon(left);
-    Path::addPath(left, INT_MAX);
+    Path::addPath(left, getSize().ws_col);
 
     std::cout << left.getContent() << right.getContent() << std::endl;
+
+    std::cout << (status ? fore::GREEN : fore::RED) + "❯" + ctrl::RESET;
 }

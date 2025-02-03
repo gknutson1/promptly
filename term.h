@@ -44,6 +44,7 @@ struct fore {
     static constexpr string DARK_BLUE  = genFG("4");
     static constexpr string RED        = genFG("1");
     static constexpr string YELLOW     = genFG("3");
+    static constexpr string GREEN      = genFG("3");
     static constexpr string DEFAULT    = genFG(DEFAULT_FG);
     static constexpr string BG_DEFAULT = genFG(DEFAULT_BG);
 };
