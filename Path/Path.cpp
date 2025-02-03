@@ -113,7 +113,7 @@ size_t Path::minimize(string &raw_path, string &path) {
  * the homedir will br replaced with a ~. This function will attempt to shrink the cwd to fit within max_len, by first
  * shrinking every path element to it's minimum unique length, and then further shrinking as needed. The last path
  * element will always be full-size.
- * @param element Element to add directory information to
+ * @param segment Segment to add directory information to
  * @param max_len Length at which to stop minimizing.
  */
 void Path::addPath(Segment &segment, size_t max_len) {
@@ -155,16 +155,16 @@ void Path::addPath(Segment &segment, size_t max_len) {
         }
     }
 
-    // minimize the path to the smallest unique string, until we are within max_len
-    for (auto& i: path) {
-        if (len > max_len) len -= minimize(raw_path, i);
-        display.Append(i);
+    // minimize the path to the smallest unique string, until we are within max_len. Skip the last element.
+    for (auto i = path.begin(); i.peek() != nullptr; ++i) {
+        if (len > max_len || i.peek()->next == nullptr) len -= minimize(raw_path, *i);
+        display.Append(*i);
     }
 
     // If we still aren't small enough, shrink each path element to one character until we are
     // within max_size, starting from left to right and skipping the last element.
-    for (auto begin = display.begin(); begin.peek()->next != nullptr; ++begin) {
-        auto &s = *begin;
+    for (auto i = display.begin(); i.peek()->next != nullptr; ++i) {
+        auto &s = *i;
         if (s.length() <= 1 ) continue;
         if (len <= max_len) break;
 
