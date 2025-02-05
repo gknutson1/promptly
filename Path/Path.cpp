@@ -157,7 +157,7 @@ void Path::addPath(Segment &segment, size_t max_len) {
 
     // minimize the path to the smallest unique string, until we are within max_len. Skip the last element.
     for (auto i = path.begin(); i.peek() != nullptr; ++i) {
-        if (len > max_len || i.peek()->next == nullptr) len -= minimize(raw_path, *i);
+        if (len > max_len && i.peek()->next != nullptr) len -= minimize(raw_path, *i);
         display.Append(*i);
     }
 
@@ -165,8 +165,8 @@ void Path::addPath(Segment &segment, size_t max_len) {
     // within max_size, starting from left to right and skipping the last element.
     for (auto i = display.begin(); i.peek()->next != nullptr; ++i) {
         auto &s = *i;
-        if (s.length() <= 1 ) continue;
-        if (len <= max_len) break;
+        if (s.length() <= 1 ) continue; // If path element is already only one character, skip it
+        if (len <= max_len) break; // Exit loop when we are within max_len
 
         len -= s.length() - 1;
         s = s[0];
