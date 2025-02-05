@@ -44,7 +44,7 @@ struct fore {
     static constexpr string DARK_BLUE  = genFG("4");
     static constexpr string RED        = genFG("1");
     static constexpr string YELLOW     = genFG("3");
-    static constexpr string GREEN      = genFG("3");
+    static constexpr string GREEN      = genFG("2");
     static constexpr string DEFAULT    = genFG(DEFAULT_FG);
     static constexpr string BG_DEFAULT = genFG(DEFAULT_BG);
 };
@@ -59,9 +59,10 @@ struct chars {
     // And it is (probably) easier/more preformant to store them as a string,
     // instead of a char16_t that will need to be converted back into a 2-byte u8 char
     // every time it needs to be added to a segment.
+    // M_SEP is an exception becuase we need to create a strip of chars with it.
     static constexpr string R_SEP = "\ue0b3";
     static constexpr size_t R_SEP_LEN = u_strlen(R_SEP);
-    static constexpr string M_SEP = "\u00b7";
+    static constexpr char   M_SEP = '\u00b7';
     static constexpr string L_SEP = "\ue0b1";
     static constexpr size_t L_SEP_LEN = u_strlen(L_SEP);
     static constexpr string CPU = "\uf4bc";
