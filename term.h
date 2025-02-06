@@ -62,7 +62,8 @@ struct chars {
     // M_SEP is an exception becuase we need to create a strip of chars with it.
     static constexpr string R_SEP = "\ue0b3";
     static constexpr size_t R_SEP_LEN = u_strlen(R_SEP);
-    static constexpr char   M_SEP = '\u00b7';
+    // ReSharper disable once CppMultiCharacterLiteral
+    static constexpr char16_t M_SEP = '\u00b7';
     static constexpr string L_SEP = "\ue0b1";
     static constexpr size_t L_SEP_LEN = u_strlen(L_SEP);
     static constexpr string CPU = "\uf4bc";
@@ -103,7 +104,8 @@ static const std::map<int, string> bat_charge = {
 };
 
 struct ctrl {
-    static constexpr string RESET = genSEQ("0");
+    static constexpr string RESET    = genSEQ("0");
     static constexpr string RESET_FG = genSEQ("39");
     static constexpr string RESET_BG = genSEQ("49");
+    static constexpr string BLINK    = genSEQ("5");
 };

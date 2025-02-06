@@ -1,3 +1,31 @@
+// === Memory page information ===
+// the name of the shared memory page, and it's mode. Also applies to the semaphore.
+#define PAGE_NAME "/promptly"
+#define PAGE_MODE 0666
+
+// === Time information ===
+// Format for the time display.
+
+// "%T" is equivalent to "%H:%M:%S"
+#define TIME_FORMAT "%T"
+// How many characters to allocate for the time.
+// This MUST be at least one larger than the output length of TIME_FORMAT,  as a '\n' will be added to the end.
+#define TIME_LEN 9
+
+// === Battery limits ===
+// At what charge level to change the color of the battery indicator. The largest parameter that is larger or equal to
+// the current battery level will be applied. BAT_HIGH must be 100.
+
+// Indicator will be red and blinking. If battery is charging, this will not apply and will fall back to BAT_WARN.
+#define BAT_ALARM 5
+// Indicator will be red.
+#define BAT_WARN 15
+// Indicator will be yellow.
+#define BAT_NORMAL 80
+// Indicator will be green
+#define BAT_HIGH 100
+
+
 #include <cstring>
 #include <filesystem>
 #include <iostream>
@@ -8,7 +36,6 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <semaphore.h>
-#include <climits>
 
 #include "Segment/Segment.h"
 #include "Element/Element.h"
@@ -76,22 +103,14 @@ void addUserHost(Segment &seg) {
     element->add(hostname);
 }
 
-// How many characters to allocate for the time.
-// Must be one more than the string length, as a '\n' will be added
-// Currently set to 9 (HH:MM:SS\n)
-#define TIME_LEN 9
-
 /**
  * Add an element containing the current time
  * @param seg Segment to add the element to
  */
 void addTime(Segment &seg) {
-
     char timestr[TIME_LEN] = {};
     const time_t cur_time = time(nullptr);
-
-    // "%T" equivalent to "%H:%M:%S"
-    strftime(timestr, TIME_LEN, "%T", localtime(&cur_time));
+    strftime(timestr, TIME_LEN, TIME_FORMAT, localtime(&cur_time));
 
     seg.Append(timestr);
 }
@@ -121,10 +140,18 @@ bool addBat(Segment &seg) {
     file >> buf;
     if (buf.empty()) { return false; }
 
-    Element *element = seg.Append(buf + " ");
-
     // Convert capacity to integer
     int pwr = std::stoi(buf);
+
+    Element *element = seg.Append();
+
+    if      (pwr <= BAT_ALARM)  element->addForm(ctrl::BLINK + fore::RED);
+    else if (pwr <= BAT_WARN)   element->addForm(fore::RED);
+    else if (pwr <= BAT_NORMAL) element->addForm(fore::YELLOW);
+    else if (pwr <= BAT_HIGH)   element->add(fore::GREEN);
+
+    element->add(buf + " ");
+
     // Battery icons are in steps of 10, so we need to round capacity to the tens place
     int pwr_increment =  pwr / 10 + (pwr % 10 >= 5);
 
@@ -138,6 +165,8 @@ bool addBat(Segment &seg) {
         element->add(bat_drain.at(pwr_increment), 1);
     }
 
+    element->addForm(ctrl::RESET + back::DEFAULT);
+
     return true;
 }
 
@@ -147,9 +176,6 @@ bool addBat(Segment &seg) {
  * @param seg Segment to add the element to
  */
 void addCPU(Segment& seg) {
-    #define NAME "/promptly"
-    #define MODE 0666
-
     struct stat {
         unsigned long total = 0;
         unsigned long used = 0;
@@ -157,13 +183,13 @@ void addCPU(Segment& seg) {
     };
 
     // Connect to the shared memory page, and catch the error if it doesn't exist
-    int fd = shm_open(NAME, O_RDWR, MODE);
+    int fd = shm_open(PAGE_NAME, O_RDWR, PAGE_MODE);
     const bool needs_init = fd == -1 && errno == ENOENT;
 
     // If our shared page is missing: reset errno, create the shared memory file, and set it's size
     if (needs_init) {
         errno = 0;
-        fd = shm_open(NAME, O_CREAT | O_RDWR, MODE);
+        fd = shm_open(PAGE_NAME, O_CREAT | O_RDWR, PAGE_MODE);
         ftruncate(fd, sizeof(stat));
     }
 
@@ -171,7 +197,7 @@ void addCPU(Segment& seg) {
     stat *prev = static_cast<stat*>(mmap(nullptr, sizeof(stat), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
 
     // Get the lock for the data - if it doesn't exist, create it in an unlocked state
-    sem_t *lock = sem_open(NAME, O_CREAT, MODE, 1);
+    sem_t *lock = sem_open(PAGE_NAME, O_CREAT, PAGE_MODE, 1);
 
     // If the shared memory is currently locked, wait for it to unlock, and then lock it ourselves.
     sem_wait(lock);
@@ -316,7 +342,6 @@ bool statusOK(Segment &seg, const int argc, char **argv) {
 winsize getSize() {
     winsize size; // NOLINT(*-pro-type-member-init)
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-
     return size;
 }
 
