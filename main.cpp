@@ -339,10 +339,10 @@ bool statusOK(Segment &seg, const int argc, char **argv) {
     return ok;
 }
 
-winsize getSize() {
+size_t getSize() {
     winsize size; // NOLINT(*-pro-type-member-init)
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-    return size;
+    ioctl(STDERR_FILENO, TIOCGWINSZ, &size);
+    return size.ws_col;
 }
 
 int main(int argc, char **argv) {
@@ -359,7 +359,11 @@ int main(int argc, char **argv) {
     addPythonEnv(right);
 
     getIcon(left);
-    Path::addPath(left, getSize().ws_col);
+
+    const size_t term_size = getSize();
+    const size_t remain = term_size - left.getLen() - right.getLen();
+
+    Path::addPath(left, remain);
 
     std::cout << left.getContent() << right.getContent() << std::endl;
 
