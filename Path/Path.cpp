@@ -53,7 +53,7 @@ bool Path::canAccess(const char* path) {
     if (info.st_mode & S_IWGRP && info.st_mode & S_IROTH) {
         const int group_count = getgroups(0, nullptr); // Gets a count of the current user's groups
         // We need to be one larger than group_count because user's egid is not guaranteed to be in group_count
-        auto *groups = new unsigned int[group_count + 1];
+        auto *groups = (unsigned int*) malloc(sizeof(int) * (group_count + 1));
         getgroups(group_count, groups);
         groups[group_count] = getegid();
 
