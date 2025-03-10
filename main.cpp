@@ -35,6 +35,7 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <semaphore.h>
 
 #include "Segment/Segment.h"
@@ -345,7 +346,7 @@ size_t getSize() {
     return size.ws_col;
 }
 
-int main(int argc, char **argv) {
+int main(const int argc, char **argv) {
     Segment left{fore::DEFAULT + " " + chars::L_SEP + " ", chars::L_SEP_LEN + 2};
     Segment right{fore::DEFAULT + " " + chars::R_SEP + " ", chars::R_SEP_LEN + 2};
 
@@ -361,11 +362,28 @@ int main(int argc, char **argv) {
     getIcon(left);
 
     const size_t term_size = getSize();
-    const size_t remain = term_size - left.getLen() - right.getLen();
+    size_t remain = term_size - left.getLen() - right.getLen();
 
-    Path::addPath(left, remain);
+    remain = Path::addPath(left, remain ? remain : INT_MAX);
 
-    std::cout << left.getContent() << right.getContent() << std::endl;
+    // We use fputs instead of puts to avoid a newline
+    fputs(left.getContent().c_str(), stdout);
 
-    std::cout << (status ? fore::GREEN : fore::RED) + "❯" + ctrl::RESET;
+
+
+    if (term_size) {
+        string sep;
+        sep.resize_and_overwrite(remain * 2, [](char* str, const size_t size) {
+            for (size_t i = 0; i < size; i += 2)
+                strcpy(&str[i], chars::M_SEP.c_str());
+
+            return size;
+        });
+
+        fputs(sep.c_str(), stdout);
+    }
+
+    fputs((right.getContent() + "\n").c_str(), stdout);
+
+    fputs(((status ? fore::GREEN : fore::RED) + "❯" + ctrl::RESET).c_str(), stdout);
 }
