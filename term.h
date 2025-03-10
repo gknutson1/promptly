@@ -56,14 +56,12 @@ struct back {
 
 struct chars {
     // These are strings, not chars, because they are mostly two-byte Unicode sequences,
-    // And it is (probably) easier/more preformant to store them as a string,
+    // And it is (probably) easier/more reformat to store them as a string,
     // instead of a char16_t that will need to be converted back into a 2-byte u8 char
     // every time it needs to be added to a segment.
-    // M_SEP is an exception becuase we need to create a strip of chars with it.
     static constexpr string R_SEP = "\ue0b3";
     static constexpr size_t R_SEP_LEN = u_strlen(R_SEP);
-    // ReSharper disable once CppMultiCharacterLiteral
-    static constexpr char16_t M_SEP = '\u00b7';
+    static constexpr string M_SEP = "\u00b7";
     static constexpr string L_SEP = "\ue0b1";
     static constexpr size_t L_SEP_LEN = u_strlen(L_SEP);
     static constexpr string CPU = "\uf4bc";
