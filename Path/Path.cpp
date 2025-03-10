@@ -115,8 +115,9 @@ size_t Path::minimize(string &raw_path, string &path) {
  * element will always be full-size.
  * @param segment Segment to add directory information to
  * @param max_len Length at which to stop minimizing.
+ * @return max_len - the size of the path segment generated.
  */
-void Path::addPath(Segment &segment, size_t max_len) {
+size_t Path::addPath(Segment &segment, size_t max_len) {
     Element *element = segment.Append();
     string pwd = get_current_dir_name();
     // If pwd does not have a trailing slash, add one
@@ -175,4 +176,6 @@ void Path::addPath(Segment &segment, size_t max_len) {
     if (!in_home) element->add(SEP);
 
     element->add(display.toString(string{SEP}));
+
+    return max_len - len;
 }

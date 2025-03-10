@@ -7,5 +7,5 @@ class Path {
     [[nodiscard]] static bool canAccess(const char* path);
     static size_t minimize(string& raw_path, string& path);
 public:
-    static void addPath(Segment &segment, size_t max_len);
+    static size_t addPath(Segment &segment, size_t max_len);
 };
