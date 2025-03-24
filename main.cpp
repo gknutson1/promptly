@@ -149,7 +149,7 @@ bool addBat(Segment &seg) {
     if      (pwr <= BAT_ALARM)  element->addForm(ctrl::BLINK + fore::RED);
     else if (pwr <= BAT_WARN)   element->addForm(fore::RED);
     else if (pwr <= BAT_NORMAL) element->addForm(fore::YELLOW);
-    else if (pwr <= BAT_HIGH)   element->add(fore::GREEN);
+    else if (pwr <= BAT_HIGH)   element->addForm(fore::GREEN);
 
     element->add(buf + " ");
 
@@ -161,9 +161,9 @@ bool addBat(Segment &seg) {
     file >> buf;
 
     if (buf == "Charging" || buf == "Full") {
-        element->add(bat_charge.at(pwr_increment), 1);
+        element->addIcon(bat_charge.at(pwr_increment));
     } else {
-        element->add(bat_drain.at(pwr_increment), 1);
+        element->addIcon(bat_drain.at(pwr_increment));
     }
 
     element->addForm(ctrl::RESET + back::DEFAULT);
