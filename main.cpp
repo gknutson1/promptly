@@ -161,9 +161,9 @@ bool addBat(Segment &seg) {
     file >> buf;
 
     if (buf == "Charging" || buf == "Full") {
-        element->addIcon(bat_charge.at(pwr_increment));
+        element->addIcon(bat_charge[pwr_increment]);
     } else {
-        element->addIcon(bat_drain.at(pwr_increment));
+        element->addIcon(bat_drain[pwr_increment]);
     }
 
     element->addForm(ctrl::RESET + back::DEFAULT);
@@ -309,7 +309,7 @@ void getIcon(Segment &seg) {
     for (size_t i = str.length() - 1;; i--) {
         char c = str[i];
         if (c == ' ' || c == '-' || c == '_') { str.erase(i, 1); }
-        else { str[i] = tolower(c); }
+        else { str[i] = (char) tolower(c); }
         if (i <= 0) { break; }
     }
 
