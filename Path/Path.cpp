@@ -122,12 +122,12 @@ size_t Path::addPath(Segment &segment, size_t max_len) {
     string pwd = get_current_dir_name();
     // If pwd does not have a trailing slash, add one
     if (! pwd.ends_with(SEP)) { pwd += SEP; }
-    // -2 for the beginning and ending separators, +3 for the icon
-    size_t len = pwd.length() - 1 + 3;
+    // -2 for the beginning and ending separators, -3 for the icon
+    size_t len = pwd.length() + (2 + 3);
 
     const string home = getHome();
     const bool in_home = pwd.starts_with(home);
-//    const bool in_home = false;
+    //    const bool in_home = false;
 
     if (canAccess(pwd.c_str())) { // Check if we have read/write access to pwd
         if (in_home) element->addIcon(chars::HOME); // If we are in our homedir, use the home icon
@@ -135,6 +135,7 @@ size_t Path::addPath(Segment &segment, size_t max_len) {
     }
     else element->addIcon(chars::LOCK); // If we don't have read/write access, use the lock icon
 
+    element->add(" ");
 
     List<string> path; // The actual path, for iterating through
     List<string> display; // What will be displayed
