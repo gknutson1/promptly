@@ -235,11 +235,11 @@ void addCPU(Segment& seg) {
     total += std::strtol(str, str_end, 10); // idle
     total += std::strtol(str, str_end, 10); // iowait
 
-    used += std::strtol(str, str_end, 10); // irq
-    used += std::strtol(str, str_end, 10); // softirq
-    used += std::strtol(str, str_end, 10); // steal
-    used += std::strtol(str, str_end, 10); // guest
-    used += std::strtol(str, str_end, 10); // guest_nice
+    used += std::strtol(str, str_end, 10);  // irq
+    used += std::strtol(str, str_end, 10);  // softirq
+    used += std::strtol(str, str_end, 10);  // steal
+    used += std::strtol(str, str_end, 10);  // guest
+    used += std::strtol(str, str_end, 10);  // guest_nice
 
     total += used;
 
@@ -355,8 +355,8 @@ int main(const int argc, char **argv) {
     addUserHost(right);
     addTime(right);
 
-    addBat(right);
     addCPU(right);
+    addBat(right);
     addPythonEnv(right);
 
     getIcon(left);
@@ -365,11 +365,14 @@ int main(const int argc, char **argv) {
     size_t remain = term_size - left.getLen() - right.getLen();
 
     remain = Path::addPath(left, remain ? remain : INT_MAX);
+    //
+    // remain = term_size - left.getLen() - right.getLen();
+    //
+    // fputs(string(left.getLen(), '|').c_str(), stdout);
+    // fputs("\n", stdout);
 
     // We use fputs instead of puts to avoid a newline
     fputs(left.getContent().c_str(), stdout);
-
-
 
     if (term_size) {
         string sep;
@@ -383,7 +386,10 @@ int main(const int argc, char **argv) {
         fputs(sep.c_str(), stdout);
     }
 
-    fputs((right.getContent() + "\n").c_str(), stdout);
+    // fputs("\n", stdout);
+    // fputs(string(right.getLen(), '|').c_str(), stdout);
+    // fputs("\n", stdout);
 
-    fputs(((status ? fore::GREEN : fore::RED) + "❯" + ctrl::RESET).c_str(), stdout);
+    fputs((right.getContent() + "\n" + (status ? fore::GREEN : fore::RED) + "❯" + ctrl::RESET + " ").c_str(), stdout);
+
 }

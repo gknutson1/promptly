@@ -1,6 +1,5 @@
 #pragma once
 
-#include <map>
 #include <string>
 
 using std::string;
@@ -17,7 +16,7 @@ using std::string;
  * @param str The string to count
  * @return The number of characters that would be displayed if the string were printed
  */
-static constexpr size_t u_strlen(string str) {
+static constexpr size_t u_strlen(const string& str) {
     size_t result = 0;
 
     bool term_seq = false;
@@ -29,7 +28,7 @@ static constexpr size_t u_strlen(string str) {
         else if (chr == '\033') {term_seq = true; }
 
         // Any byte that starts with the bits "10" is an extension
-        // of a utf-s character (the first bit in a multibyte utf-8
+        // of a utf-8 character (the first bit in a multibyte utf-8
         // char starts w/ "11", and a non multibyte char starts w/ "0")
         // so we skip everything that starts w/ "10"
         else if ( (chr & 0xc0) != 0x80) result++;
